@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
 
 export const runtime = "edge";
@@ -8,11 +7,12 @@ export const runtime = "edge";
 interface GenerateRequest {
   goal: string;
   customInstructions?: string;
+  model?: string;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { goal, customInstructions } = (await req.json()) as GenerateRequest;
+    const { goal, customInstructions, model } = (await req.json()) as GenerateRequest;
 
     if (!goal || typeof goal !== "string") {
       return new Response(JSON.stringify({ error: "Goal is required" }), {
@@ -71,10 +71,12 @@ For reference, when Shohei Ohtani used this method for "Be the #1 draft pick for
           let retries = 0;
           const maxRetries = 3;
 
+          const selectedModel = model || "anthropic/claude-sonnet-4.5";
+
           while (retries < maxRetries) {
             try {
               pillarsResponse = await generateObject({
-                model: anthropic("claude-sonnet-4-5-20250929"),
+                model: selectedModel,
                 prompt: pillarsPrompt,
                 schema: z.object({
                   pillars: z.array(z.string()).length(8),
@@ -132,7 +134,7 @@ For example, for Shohei Ohtani's "Karma/Luck" pillar, his tasks included:
             while (taskRetries < taskMaxRetries) {
               try {
                 tasksResponse = await generateObject({
-                  model: anthropic("claude-sonnet-4-5-20250929"),
+                  model: selectedModel,
                   prompt: tasksPrompt,
                   schema: z.object({
                     tasks: z.array(z.string()).length(8),

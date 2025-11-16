@@ -1,6 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
 
 interface HaradaPlan {
   goal: string;
@@ -32,7 +39,19 @@ interface ExpandedCell {
 export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) {
   const [expandedCell, setExpandedCell] = useState<ExpandedCell | null>(null);
   const [showNavigationChoice, setShowNavigationChoice] = useState(false);
+  const [mobileDrilldownPillar, setMobileDrilldownPillar] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Auto-focus modal for keyboard navigation
   useEffect(() => {
@@ -395,14 +414,194 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
     );
   };
 
+  // Render mobile view with progressive disclosure
+  const renderMobileView = () => {
+    if (!plan) {
+      return (
+        <div className="w-full h-full flex items-center justify-center p-4">
+          <div className="aspect-square w-full max-w-sm grid grid-cols-3 gap-0.5 bg-gray-800 p-0.5 rounded-lg">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="bg-gray-900/30 border border-gray-700 min-h-[80px]" />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Overview - center 3x3 grid (goal + 8 pillars)
+    return (
+      <div className="w-full h-full flex items-center justify-center p-4 overflow-y-auto">
+        <div className="w-full max-w-sm">
+          <div className="aspect-square w-full grid grid-cols-3 gap-1 bg-gray-800 p-1 rounded-lg shadow-2xl">
+            {[...Array(9)].map((_, index) => {
+              const row = Math.floor(index / 3);
+              const col = index % 3;
+
+              // Center cell is goal
+              if (row === 1 && col === 1) {
+                const isEmpty = !plan.goal;
+                const isGenerating = generatingState.type === 'goal' && isEmpty;
+
+                return (
+                  <div
+                    key={index}
+                    className={`border border-gray-700 p-2 flex items-center justify-center text-center transition-all ${
+                      isEmpty
+                        ? isGenerating
+                          ? 'bg-blue-600/30 border-blue-500/50 animate-pulse'
+                          : 'bg-gray-800/30'
+                        : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg'
+                    }`}
+                  >
+                    <span className="text-[0.7rem] font-light leading-tight">
+                      {plan.goal || ''}
+                    </span>
+                  </div>
+                );
+              }
+
+              // Surrounding cells are pillars
+              const pillarIndex = getCenterPillarIndex(row, col);
+              const pillar = plan.pillars[pillarIndex];
+              const isEmpty = !pillar?.title;
+              const isGenerating = generatingState.type === 'pillars' && isEmpty;
+
+              return (
+                <div
+                  key={index}
+                  onClick={() => {
+                    if (!isEmpty) {
+                      setMobileDrilldownPillar(pillarIndex);
+                    }
+                  }}
+                  className={`border border-gray-700 p-2 flex items-center justify-center text-center transition-all ${
+                    isEmpty
+                      ? isGenerating
+                        ? 'bg-purple-600/30 border-purple-500/50 animate-pulse'
+                        : 'bg-gray-800/20'
+                      : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md cursor-pointer active:scale-95'
+                  }`}
+                >
+                  <span className="text-[0.65rem] font-light uppercase tracking-tight leading-tight">
+                    {pillar?.title || ''}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Hint text */}
+          {plan.pillars.some(p => p.title) && (
+            <p className="text-center text-xs text-gray-500 mt-4">
+              Tap any pillar to view its tasks
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Get all filled cells for modal navigation
+  const allCells: ExpandedCell[] = [];
+  if (plan) {
+    if (plan.goal) {
+      allCells.push({ content: plan.goal, type: 'goal', index: allCells.length });
+    }
+    for (let pillarIndex = 0; pillarIndex < plan.pillars.length; pillarIndex++) {
+      const pillar = plan.pillars[pillarIndex];
+      if (pillar.title) {
+        allCells.push({
+          content: pillar.title,
+          type: 'pillar',
+          index: allCells.length,
+          parent: plan.goal ? { content: plan.goal, type: 'goal' } : undefined
+        });
+      }
+      for (const task of pillar.tasks) {
+        if (task) {
+          allCells.push({
+            content: task,
+            type: 'task',
+            index: allCells.length,
+            parent: pillar.title ? { content: pillar.title, type: 'pillar' } : undefined
+          });
+        }
+      }
+    }
+  }
+
   return (
     <>
       <div ref={gridRef} className="w-full h-full flex items-center justify-center overflow-hidden p-2">
-        {/* 9x9 Grid - Always visible, scales to fit */}
-        <div className="aspect-square h-full max-h-full">
-          {renderGrid()}
-        </div>
+        {isMobile ? (
+          renderMobileView()
+        ) : (
+          <div className="aspect-square h-full max-h-full">
+            {renderGrid()}
+          </div>
+        )}
       </div>
+
+      {/* Mobile Drawer for Pillar Tasks */}
+      {isMobile && mobileDrilldownPillar !== null && plan && (
+        <Drawer open={mobileDrilldownPillar !== null} onOpenChange={(open) => !open && setMobileDrilldownPillar(null)}>
+          <DrawerContent className="max-h-[85vh]">
+            <DrawerHeader className="bg-gradient-to-r from-purple-600 to-purple-700 text-white">
+              <DrawerTitle className="text-xl font-light">
+                {plan.pillars[mobileDrilldownPillar]?.title}
+              </DrawerTitle>
+              <DrawerDescription className="text-white/70 text-xs">
+                Goal: {plan.goal}
+              </DrawerDescription>
+            </DrawerHeader>
+
+            <div className="p-4 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-2">
+                {plan.pillars[mobileDrilldownPillar]?.tasks.map((task, index) => {
+                  const isEmpty = !task || task.trim() === '';
+                  const isGenerating = generatingState.type === 'tasks' &&
+                                      isEmpty &&
+                                      generatingState.pillarIndex === mobileDrilldownPillar;
+
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        if (!isEmpty) {
+                          const cellIndex = allCells.findIndex(
+                            (cell) => cell.content === task && cell.type === 'task'
+                          );
+                          if (cellIndex >= 0) {
+                            setMobileDrilldownPillar(null); // Close drawer
+                            if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+                              (document as any).startViewTransition(() => {
+                                setExpandedCell(allCells[cellIndex]);
+                              });
+                            } else {
+                              setExpandedCell(allCells[cellIndex]);
+                            }
+                          }
+                        }
+                      }}
+                      className={`p-3 rounded-lg border transition-all min-h-[100px] flex items-center justify-center text-center ${
+                        isEmpty
+                          ? isGenerating
+                            ? 'bg-gray-700/40 border-gray-600/50 animate-pulse'
+                            : 'bg-gray-900/30 border-gray-800'
+                          : 'bg-gray-800/50 border-gray-700 active:bg-gray-700/50 cursor-pointer'
+                      }`}
+                    >
+                      <span className="text-xs font-light text-gray-300 leading-snug">
+                        {task || ''}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
 
       {/* Expanded Cell Modal */}
       {expandedCell && (

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { HaradaGrid } from '@/components/HaradaGrid';
-import html2canvas from 'html2canvas';
+import { domToPng } from 'modern-screenshot';
 
 export interface HaradaPlan {
   goal: string;
@@ -33,7 +33,19 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [customInstructions, setCustomInstructions] = useState('');
+  const [selectedModel, setSelectedModel] = useState('anthropic/claude-sonnet-4.5');
   const gridRef = useRef<HTMLDivElement>(null);
+
+  const modelOptions = [
+    { value: 'anthropic/claude-haiku-4.5', label: 'Claude Haiku 4.5' },
+    { value: 'anthropic/claude-sonnet-4.5', label: 'Claude Sonnet 4.5' },
+    { value: 'anthropic/claude-opus-4.1', label: 'Claude Opus 4.1' },
+    { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+    { value: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
+    { value: 'openai/gpt-5', label: 'GPT-5' },
+    { value: 'deepseek/deepseek-v3.2-exp', label: 'DeepSeek V3.2' },
+  ];
 
   // Load plan from localStorage on mount
   useEffect(() => {
@@ -106,35 +118,15 @@ export default function Home() {
     if (!gridRef.current || !plan) return;
 
     try {
-      const canvas = await html2canvas(gridRef.current, {
+      const dataUrl = await domToPng(gridRef.current, {
         backgroundColor: '#0a0a0a',
         scale: 2,
-        logging: false,
-        ignoreElements: (element) => {
-          // Ignore elements that might have unsupported CSS
-          return false;
-        },
-        onclone: (clonedDoc) => {
-          // Fix any lab() or other unsupported color functions in the cloned document
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach((el) => {
-            const htmlEl = el as HTMLElement;
-            const computedStyle = window.getComputedStyle(el);
-
-            // Convert any lab/lch colors to RGB
-            if (computedStyle.backgroundColor && computedStyle.backgroundColor.includes('lab')) {
-              htmlEl.style.backgroundColor = '#0a0a0a';
-            }
-            if (computedStyle.color && computedStyle.color.includes('lab')) {
-              htmlEl.style.color = '#ffffff';
-            }
-          });
-        },
+        quality: 1,
       });
 
       const link = document.createElement('a');
       link.download = `harada-method-${plan.goal.slice(0, 30).replace(/[^a-z0-9]/gi, '-').toLowerCase()}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.click();
     } catch (error) {
       console.error('Failed to save as PNG:', error);
@@ -167,7 +159,8 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           goal,
-          customInstructions: customInstructions.trim() || undefined
+          customInstructions: customInstructions.trim() || undefined,
+          model: selectedModel,
         }),
       });
 
@@ -278,14 +271,29 @@ export default function Home() {
               />
 
               {advancedMode && (
-                <textarea
-                  placeholder="Custom instructions (optional): e.g., 'Focus on physical health and outdoor activities' or 'Make tasks more specific and measurable'"
-                  value={customInstructions}
-                  onChange={(e) => setCustomInstructions(e.target.value)}
-                  disabled={isLoading}
-                  rows={3}
-                  className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 placeholder-gray-500 text-sm font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500 resize-none"
-                />
+                <>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    disabled={isLoading}
+                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 text-sm font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500 appearance-none cursor-pointer"
+                  >
+                    {modelOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <textarea
+                    placeholder="Custom instructions (optional): e.g., 'Focus on physical health and outdoor activities' or 'Make tasks more specific and measurable'"
+                    value={customInstructions}
+                    onChange={(e) => setCustomInstructions(e.target.value)}
+                    disabled={isLoading}
+                    rows={3}
+                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 placeholder-gray-500 text-sm font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500 resize-none"
+                  />
+                </>
               )}
             </div>
 

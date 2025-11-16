@@ -67,7 +67,7 @@ For reference, when Shohei Ohtani used this method for "Be the #1 draft pick for
 • Karma/Luck
 • Mental Toughness`;
 
-          let pillarsResponse;
+          let pillarsResponse: Awaited<ReturnType<typeof generateObject<typeof z.object>>> | undefined;
           let retries = 0;
           const maxRetries = 3;
 
@@ -91,6 +91,10 @@ For reference, when Shohei Ohtani used this method for "Be the #1 draft pick for
               // Wait a bit before retrying
               await new Promise(resolve => setTimeout(resolve, 1000));
             }
+          }
+
+          if (!pillarsResponse) {
+            throw new Error('Failed to generate pillars');
           }
 
           const pillarTitles = pillarsResponse.object.pillars;
@@ -127,7 +131,7 @@ For example, for Shohei Ohtani's "Karma/Luck" pillar, his tasks included:
 • Being positive
 • Being someone people want to support`;
 
-            let tasksResponse;
+            let tasksResponse: Awaited<ReturnType<typeof generateObject<typeof z.object>>> | undefined;
             let taskRetries = 0;
             const taskMaxRetries = 3;
 
@@ -151,7 +155,11 @@ For example, for Shohei Ohtani's "Karma/Luck" pillar, his tasks included:
               }
             }
 
-            send({ type: "tasks", pillarIndex: i, tasks: tasksResponse!.object.tasks });
+            if (!tasksResponse) {
+              throw new Error(`Failed to generate tasks for pillar "${pillarTitle}"`);
+            }
+
+            send({ type: "tasks", pillarIndex: i, tasks: tasksResponse.object.tasks });
           }
 
           // Send completion

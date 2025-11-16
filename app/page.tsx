@@ -34,6 +34,7 @@ export default function Home() {
   const [advancedMode, setAdvancedMode] = useState(false);
   const [customInstructions, setCustomInstructions] = useState('');
   const [selectedModel, setSelectedModel] = useState('anthropic/claude-sonnet-4.5');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const modelOptions = [
@@ -318,52 +319,129 @@ export default function Home() {
             )}
           </button>
 
-          {/* Action Buttons - Always visible, disabled when no plan */}
-          <button
-            onClick={() => setAdvancedMode(!advancedMode)}
-            className={`flex items-center gap-1 px-3 py-2.5 text-xs font-light rounded-lg transition duration-150 border flex-shrink-0 ${
-              advancedMode
-                ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
-            }`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            <span className="hidden md:inline">Advanced</span>
-          </button>
+          {/* Action Buttons - Desktop: show all, Mobile: single menu */}
+          <div className="hidden md:flex gap-2 flex-shrink-0">
+            <button
+              onClick={() => setAdvancedMode(!advancedMode)}
+              className={`flex items-center gap-1 px-3 py-2.5 text-xs font-light rounded-lg transition duration-150 border ${
+                advancedMode
+                  ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
+                  : 'bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              <span>Advanced</span>
+            </button>
 
-          <button
-            onClick={() => setShowHistory(true)}
-            className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700 flex-shrink-0"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="hidden md:inline">History</span>
-          </button>
+            <button
+              onClick={() => setShowHistory(true)}
+              className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>History</span>
+            </button>
 
-          <button
-            onClick={handleSaveAsPNG}
-            disabled={!plan}
-            className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800 flex-shrink-0"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span className="hidden md:inline">PNG</span>
-          </button>
+            <button
+              onClick={handleSaveAsPNG}
+              disabled={!plan}
+              className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>PNG</span>
+            </button>
 
-          <button
-            onClick={handlePrint}
-            disabled={!plan}
-            className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800 flex-shrink-0"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            <span className="hidden md:inline">Print</span>
-          </button>
+            <button
+              onClick={handlePrint}
+              disabled={!plan}
+              className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span>Print</span>
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden relative flex-shrink-0">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            {showMobileMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
+                <div className="absolute right-0 bottom-full mb-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setAdvancedMode(!advancedMode);
+                      setShowMobileMenu(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-light transition-colors ${
+                      advancedMode ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                    Advanced
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowHistory(true);
+                      setShowMobileMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-light text-gray-300 hover:bg-gray-700 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    History
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleSaveAsPNG();
+                      setShowMobileMenu(false);
+                    }}
+                    disabled={!plan}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-light text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Save as PNG
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handlePrint();
+                      setShowMobileMenu(false);
+                    }}
+                    disabled={!plan}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-light text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Print
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           </div>
         </div>
       </section>

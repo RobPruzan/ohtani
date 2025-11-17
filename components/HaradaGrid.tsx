@@ -300,8 +300,8 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
         cellData.pillarIndex === generatingState.pillarIndex);
 
     // Cell styling based on type - DARK MODE
-    let cellClasses = 'border border-gray-800 text-center transition-all min-h-[30px] md:min-h-[40px]';
-    let textClasses = 'text-[0.45rem] md:text-[0.5rem] leading-tight break-words';
+    let cellClasses = 'border border-gray-800 text-center transition-all p-1 h-full w-full overflow-hidden';
+    let textClasses = 'leading-snug break-words hyphens-auto';
 
     if (isGoal) {
       if (isEmpty) {
@@ -311,7 +311,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
       } else {
         cellClasses += ' bg-gradient-to-br from-blue-600 to-blue-700 text-white font-medium shadow-lg';
       }
-      textClasses = 'text-[0.55rem] md:text-[0.65rem] font-light break-words';
+      textClasses += ' font-light';
     } else if (isPillar) {
       if (isEmpty) {
         cellClasses += isGenerating
@@ -320,7 +320,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
       } else {
         cellClasses += ' bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium shadow-md';
       }
-      textClasses = 'text-[0.5rem] md:text-[0.55rem] font-light uppercase tracking-tight break-words';
+      textClasses += ' font-light uppercase tracking-tight';
     } else if (isTask) {
       if (isEmpty) {
         cellClasses += isGenerating
@@ -329,7 +329,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
       } else {
         cellClasses += ' bg-gray-800/50 hover:bg-gray-700/50 text-gray-300';
       }
-      textClasses = 'text-[0.45rem] md:text-[0.5rem] font-light break-words';
+      textClasses += ' font-light';
     }
 
     const handleClick = () => {
@@ -364,18 +364,41 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
       }
     };
 
+    // Dynamic font size based on content length
+    const getDynamicFontSize = () => {
+      if (isEmpty) return '';
+      const contentLength = cellData.content.length;
+
+      if (isGoal) {
+        if (contentLength < 30) return 'text-[0.9rem]';
+        if (contentLength < 50) return 'text-[0.8rem]';
+        if (contentLength < 80) return 'text-[0.7rem]';
+        return 'text-[0.6rem]';
+      } else if (isPillar) {
+        if (contentLength < 20) return 'text-[0.75rem]';
+        if (contentLength < 35) return 'text-[0.65rem]';
+        if (contentLength < 50) return 'text-[0.55rem]';
+        return 'text-[0.5rem]';
+      } else {
+        // Tasks
+        if (contentLength < 40) return 'text-[0.7rem]';
+        if (contentLength < 70) return 'text-[0.6rem]';
+        if (contentLength < 100) return 'text-[0.55rem]';
+        if (contentLength < 140) return 'text-[0.5rem]';
+        return 'text-[0.45rem]';
+      }
+    };
+
     return (
       <div
         key={`${sectionRow}-${sectionCol}-${cellRow}-${cellCol}`}
-        className={`${cellClasses} ${!isEmpty ? 'cursor-pointer' : ''}`}
+        className={`${cellClasses} ${!isEmpty ? 'cursor-pointer' : ''} flex items-center justify-center`}
         onClick={handleClick}
       >
         {isEmpty ? (
-          <span className="text-gray-700 text-xs"></span>
+          <span className="text-gray-700 text-xs min-h-[30px]"></span>
         ) : (
-          <div className="w-full h-full overflow-auto flex items-center justify-center p-0.5">
-            <span className={textClasses}>{cellData.content}</span>
-          </div>
+          <span className={`${textClasses} ${getDynamicFontSize()}`}>{cellData.content}</span>
         )}
       </div>
     );
@@ -393,7 +416,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
     return (
       <div
         key={`section-${sectionRow}-${sectionCol}`}
-        className="grid grid-cols-3 gap-0 border-2 border-gray-700"
+        className="grid grid-cols-3 grid-rows-3 gap-0 border-2 border-gray-700 h-full w-full"
       >
         {cells}
       </div>
@@ -410,7 +433,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
     }
 
     return (
-      <div className="w-full h-full grid grid-cols-3 gap-0.5 md:gap-1 bg-gray-800 p-0.5 md:p-1 rounded-lg shadow-2xl">
+      <div className="w-full h-full grid grid-cols-3 grid-rows-3 gap-0.5 bg-gray-800 p-0.5 rounded-lg shadow-2xl">
         {sections}
       </div>
     );
@@ -534,11 +557,11 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
 
   return (
     <>
-      <div ref={gridRef} className="w-full h-full flex items-center justify-center overflow-hidden p-2">
+      <div ref={gridRef} className="w-full h-full overflow-hidden p-2">
         {isMobile ? (
           renderMobileView()
         ) : (
-          <div className="aspect-square max-w-full max-h-full">
+          <div className="w-full h-full">
             {renderGrid()}
           </div>
         )}

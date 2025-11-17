@@ -536,7 +536,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
         {isMobile ? (
           renderMobileView()
         ) : (
-          <div className="aspect-square h-full max-h-full">
+          <div className="aspect-square max-w-full max-h-full">
             {renderGrid()}
           </div>
         )}

@@ -2,8 +2,27 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "The Harada Method - 64 Cells to Achieve Your Goal",
-  description: "Create your personalized 64-cell roadmap using the Harada Method, inspired by Shohei Ohtani",
+  title: "Harada Method — AI-Powered 64-Cell Goal Planner",
+  description: "Transform any goal into a structured 64-cell action plan using the proven Harada Method.",
+  openGraph: {
+    title: "Harada Method — AI-Powered 64-Cell Goal Planner",
+    description: "Transform any goal into a structured 64-cell action plan using the proven Harada Method.",
+    images: [
+      {
+        url: '/api/og',
+        width: 1200,
+        height: 630,
+        alt: 'Harada Method 64-Cell Goal Planning System',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Harada Method — AI-Powered 64-Cell Goal Planner",
+    description: "Transform any goal into a structured 64-cell action plan using the proven Harada Method.",
+    images: ['/api/og'],
+  },
 };
 
 export default function RootLayout({

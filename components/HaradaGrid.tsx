@@ -300,8 +300,8 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
         cellData.pillarIndex === generatingState.pillarIndex);
 
     // Cell styling based on type - DARK MODE
-    let cellClasses = 'border border-gray-800 p-0.5 md:p-1 flex items-center justify-center text-center transition-all min-h-[30px] md:min-h-[40px]';
-    let textClasses = 'text-[0.45rem] md:text-[0.5rem] leading-tight';
+    let cellClasses = 'border border-gray-800 p-0.5 md:p-1 flex items-center justify-center text-center transition-all min-h-[30px] md:min-h-[40px] overflow-auto';
+    let textClasses = 'text-[0.45rem] md:text-[0.5rem] leading-tight break-words';
 
     if (isGoal) {
       if (isEmpty) {
@@ -311,7 +311,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
       } else {
         cellClasses += ' bg-gradient-to-br from-blue-600 to-blue-700 text-white font-medium shadow-lg';
       }
-      textClasses = 'text-[0.55rem] md:text-[0.65rem] font-light';
+      textClasses = 'text-[0.55rem] md:text-[0.65rem] font-light break-words';
     } else if (isPillar) {
       if (isEmpty) {
         cellClasses += isGenerating
@@ -320,7 +320,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
       } else {
         cellClasses += ' bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium shadow-md';
       }
-      textClasses = 'text-[0.5rem] md:text-[0.55rem] font-light uppercase tracking-tight';
+      textClasses = 'text-[0.5rem] md:text-[0.55rem] font-light uppercase tracking-tight break-words';
     } else if (isTask) {
       if (isEmpty) {
         cellClasses += isGenerating
@@ -329,7 +329,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
       } else {
         cellClasses += ' bg-gray-800/50 hover:bg-gray-700/50 text-gray-300';
       }
-      textClasses = 'text-[0.45rem] md:text-[0.5rem] font-light';
+      textClasses = 'text-[0.45rem] md:text-[0.5rem] font-light break-words';
     }
 
     const handleClick = () => {

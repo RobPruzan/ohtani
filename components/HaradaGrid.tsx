@@ -490,6 +490,8 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
               const pillar = plan.pillars[pillarIndex];
               const isEmpty = !pillar?.title;
               const isGenerating = generatingState.type === 'pillars' && isEmpty;
+              const isGeneratingTasks = generatingState.type === 'tasks' && generatingState.pillarIndex === pillarIndex;
+              const hasAllTasks = pillar?.tasks && pillar.tasks.every(t => t && t.trim() !== '');
 
               return (
                 <div
@@ -504,7 +506,11 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
                       ? isGenerating
                         ? 'bg-purple-600/30 border-purple-500/50 animate-pulse'
                         : 'bg-gray-800/20'
-                      : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md cursor-pointer active:scale-95'
+                      : isGeneratingTasks
+                      ? 'bg-purple-600/30 border-purple-500/50 text-white shadow-md cursor-pointer active:scale-95 animate-pulse'
+                      : hasAllTasks
+                      ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md cursor-pointer active:scale-95'
+                      : 'bg-gray-700 text-gray-300 shadow-md cursor-pointer active:scale-95'
                   }`}
                 >
                   <span className="text-[0.65rem] font-light uppercase tracking-tight leading-tight">
@@ -512,6 +518,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
                   </span>
                 </div>
               );
+
             })}
           </div>
 

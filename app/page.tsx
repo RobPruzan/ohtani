@@ -244,7 +244,7 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-gray-950 to-gray-900 flex flex-col">
+    <div className="h-[100dvh] w-screen overflow-hidden bg-gradient-to-br from-gray-950 to-gray-900 flex flex-col">
       {/* Grid - Takes remaining space */}
       <div className="flex-1 overflow-hidden p-2 md:p-4 flex items-center justify-center">
         <HaradaGrid plan={plan} generatingState={generatingState} gridRef={gridRef} />
@@ -268,7 +268,7 @@ export default function Home() {
                     generatePlan();
                   }
                 }}
-                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 placeholder-gray-500 text-sm font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500"
+                className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 placeholder-gray-500 text-base font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500"
               />
 
               {advancedMode && (
@@ -277,7 +277,7 @@ export default function Home() {
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
                     disabled={isLoading}
-                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 text-sm font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500 appearance-none cursor-pointer"
+                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 text-base font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500 appearance-none cursor-pointer"
                   >
                     {modelOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -292,7 +292,7 @@ export default function Home() {
                     onChange={(e) => setCustomInstructions(e.target.value)}
                     disabled={isLoading}
                     rows={3}
-                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 placeholder-gray-500 text-sm font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500 resize-none"
+                    className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-100 placeholder-gray-500 text-base font-light transition duration-150 outline-none disabled:bg-gray-800/50 disabled:text-gray-500 resize-none"
                   />
                 </>
               )}
@@ -314,7 +314,7 @@ export default function Home() {
             )}
             {!isLoading && (
               <svg className="w-5 h-5 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
             )}
           </button>

@@ -50,43 +50,72 @@ export default function Home() {
 
   // Load plan from localStorage on mount
   useEffect(() => {
-    // First check URL params for shared plan
-    const params = new URLSearchParams(window.location.search);
-    const encodedPlan = params.get('plan');
+    const loadPlanFromUrl = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const shortId = params.get('id');
+      const encodedPlan = params.get('plan');
 
-    if (encodedPlan) {
-      try {
-        const decodedPlan = JSON.parse(atob(encodedPlan));
-        setPlan(decodedPlan);
-        setStatusMessage('Plan loaded from share link');
-        setTimeout(() => setStatusMessage(''), 3000);
-        return;
-      } catch (e) {
-        console.error('Failed to load plan from URL:', e);
-        setStatusMessage('Failed to load plan from URL');
-        setIsError(true);
+      // Try loading from short ID first
+      if (shortId) {
+        try {
+          const response = await fetch(`/api/expand?id=${shortId}`);
+          if (response.ok) {
+            const { plan: loadedPlan } = await response.json();
+            setPlan(loadedPlan);
+            setStatusMessage('Plan loaded from share link');
+            setTimeout(() => setStatusMessage(''), 3000);
+            return true;
+          } else {
+            console.error('Failed to load plan from short URL');
+            setStatusMessage('Share link expired or invalid');
+            setIsError(true);
+          }
+        } catch (e) {
+          console.error('Failed to load plan from short URL:', e);
+        }
       }
-    }
 
-    // Otherwise load from localStorage
-    const saved = localStorage.getItem('harada-plan');
-    if (saved) {
-      try {
-        setPlan(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load saved plan:', e);
+      // Fall back to base64 encoded plan (legacy)
+      if (encodedPlan) {
+        try {
+          const decodedPlan = JSON.parse(atob(encodedPlan));
+          setPlan(decodedPlan);
+          setStatusMessage('Plan loaded from share link');
+          setTimeout(() => setStatusMessage(''), 3000);
+          return true;
+        } catch (e) {
+          console.error('Failed to load plan from URL:', e);
+          setStatusMessage('Failed to load plan from URL');
+          setIsError(true);
+        }
       }
-    }
 
-    // Load history list
-    const historyList = localStorage.getItem('harada-history');
-    if (historyList) {
-      try {
-        setHistory(JSON.parse(historyList));
-      } catch (e) {
-        console.error('Failed to load history list:', e);
+      return false;
+    };
+
+    loadPlanFromUrl().then((loaded) => {
+      if (loaded) return;
+
+      // Otherwise load from localStorage
+      const saved = localStorage.getItem('harada-plan');
+      if (saved) {
+        try {
+          setPlan(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to load saved plan:', e);
+        }
       }
-    }
+
+      // Load history list
+      const historyList = localStorage.getItem('harada-history');
+      if (historyList) {
+        try {
+          setHistory(JSON.parse(historyList));
+        } catch (e) {
+          console.error('Failed to load history list:', e);
+        }
+      }
+    });
   }, []);
 
   // Save plan to localStorage and URL whenever it changes
@@ -94,12 +123,25 @@ export default function Home() {
     if (plan) {
       localStorage.setItem('harada-plan', JSON.stringify(plan));
 
-      // Update URL with encoded plan (only if plan is complete)
+      // Update URL with short ID (only if plan is complete)
       const isComplete = plan.pillars.every(p => p.title && p.tasks.every(t => t));
       if (isComplete) {
-        const encodedPlan = btoa(JSON.stringify(plan));
-        const newUrl = `${window.location.pathname}?plan=${encodedPlan}`;
-        window.history.replaceState({}, '', newUrl);
+        // Create short URL in background
+        fetch('/api/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan }),
+        })
+          .then(res => res.json())
+          .then(({ shortId }) => {
+            if (shortId) {
+              const newUrl = `${window.location.pathname}?id=${shortId}`;
+              window.history.replaceState({}, '', newUrl);
+            }
+          })
+          .catch(err => {
+            console.error('Failed to create short URL:', err);
+          });
       }
     }
   }, [plan]);
@@ -170,9 +212,19 @@ export default function Home() {
     if (!plan) return;
 
     try {
-      // Encode plan to base64
-      const encodedPlan = btoa(JSON.stringify(plan));
-      const shareUrl = `${window.location.origin}${window.location.pathname}?plan=${encodedPlan}`;
+      // Shorten the plan using Redis
+      const response = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create short link');
+      }
+
+      const { shortId } = await response.json();
+      const shareUrl = `${window.location.origin}${window.location.pathname}?id=${shortId}`;
 
       // Copy to clipboard
       await navigator.clipboard.writeText(shareUrl);

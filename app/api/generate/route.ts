@@ -21,15 +21,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({
-          error: "ANTHROPIC_API_KEY environment variable is not set",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
 
     // Create a readable stream for SSE
     const encoder = new TextEncoder();

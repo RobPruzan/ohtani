@@ -50,6 +50,25 @@ export default function Home() {
 
   // Load plan from localStorage on mount
   useEffect(() => {
+    // First check URL params for shared plan
+    const params = new URLSearchParams(window.location.search);
+    const encodedPlan = params.get('plan');
+
+    if (encodedPlan) {
+      try {
+        const decodedPlan = JSON.parse(atob(encodedPlan));
+        setPlan(decodedPlan);
+        setStatusMessage('Plan loaded from share link');
+        setTimeout(() => setStatusMessage(''), 3000);
+        return;
+      } catch (e) {
+        console.error('Failed to load plan from URL:', e);
+        setStatusMessage('Failed to load plan from URL');
+        setIsError(true);
+      }
+    }
+
+    // Otherwise load from localStorage
     const saved = localStorage.getItem('harada-plan');
     if (saved) {
       try {
@@ -70,10 +89,18 @@ export default function Home() {
     }
   }, []);
 
-  // Save plan to localStorage whenever it changes
+  // Save plan to localStorage and URL whenever it changes
   useEffect(() => {
     if (plan) {
       localStorage.setItem('harada-plan', JSON.stringify(plan));
+
+      // Update URL with encoded plan (only if plan is complete)
+      const isComplete = plan.pillars.every(p => p.title && p.tasks.every(t => t));
+      if (isComplete) {
+        const encodedPlan = btoa(JSON.stringify(plan));
+        const newUrl = `${window.location.pathname}?plan=${encodedPlan}`;
+        window.history.replaceState({}, '', newUrl);
+      }
     }
   }, [plan]);
 
@@ -137,6 +164,23 @@ export default function Home() {
   const handlePrint = () => {
     if (!plan) return;
     window.print();
+  };
+
+  const handleShare = async () => {
+    if (!plan) return;
+
+    try {
+      // Encode plan to base64
+      const encodedPlan = btoa(JSON.stringify(plan));
+      const shareUrl = `${window.location.origin}${window.location.pathname}?plan=${encodedPlan}`;
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      updateStatus('Share link copied to clipboard!', false);
+    } catch (error) {
+      console.error('Failed to share:', error);
+      updateStatus('Failed to create share link', true);
+    }
   };
 
   const generatePlan = async () => {
@@ -245,6 +289,15 @@ export default function Home() {
 
   return (
     <div className="h-[100dvh] w-screen overflow-hidden bg-gradient-to-br from-gray-950 to-gray-900 flex flex-col">
+      {/* Status Message */}
+      {statusMessage && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg text-sm font-light ${
+          isError ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
+        }`}>
+          {statusMessage}
+        </div>
+      )}
+
       {/* Grid - Takes remaining space */}
       <div className="flex-1 overflow-hidden p-2 md:p-4 flex items-center justify-center">
         <HaradaGrid plan={plan} generatingState={generatingState} gridRef={gridRef} />
@@ -346,6 +399,17 @@ export default function Home() {
             </button>
 
             <button
+              onClick={handleShare}
+              disabled={!plan}
+              className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              <span>Share</span>
+            </button>
+
+            <button
               onClick={handleSaveAsPNG}
               disabled={!plan}
               className="flex items-center gap-1 px-3 py-2.5 bg-gray-800 text-gray-300 text-xs font-light rounded-lg hover:bg-gray-700 transition duration-150 border border-gray-700 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800"
@@ -409,6 +473,20 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     History
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      handleShare();
+                      setShowMobileMenu(false);
+                    }}
+                    disabled={!plan}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-light text-gray-300 hover:bg-gray-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-gray-800"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Share
                   </button>
 
                   <button

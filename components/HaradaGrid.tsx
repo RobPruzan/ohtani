@@ -300,7 +300,7 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
         cellData.pillarIndex === generatingState.pillarIndex);
 
     // Cell styling based on type - DARK MODE
-    let cellClasses = 'border border-gray-800 p-0.5 md:p-1 flex items-center justify-center text-center transition-all min-h-[30px] md:min-h-[40px] overflow-auto';
+    let cellClasses = 'border border-gray-800 text-center transition-all min-h-[30px] md:min-h-[40px]';
     let textClasses = 'text-[0.45rem] md:text-[0.5rem] leading-tight break-words';
 
     if (isGoal) {
@@ -373,7 +373,9 @@ export function HaradaGrid({ plan, generatingState, gridRef }: HaradaGridProps) 
         {isEmpty ? (
           <span className="text-gray-700 text-xs"></span>
         ) : (
-          <span className={textClasses}>{cellData.content}</span>
+          <div className="w-full h-full overflow-auto flex items-center justify-center p-0.5">
+            <span className={textClasses}>{cellData.content}</span>
+          </div>
         )}
       </div>
     );
